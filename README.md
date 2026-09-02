@@ -1,50 +1,42 @@
 # Gisto — AI Assistant Framework
-#
-# A memory-backed AI assistant with autonomous topic threading,
-# toggleable capability modules, and integration adapters for
-# Discord, Slack, Google Workspace, and Composio.
-#
-# The name is Gisto. Not Jarvis. Calm, capable, direct.
 
-## 1. What It Is
+A memory-backed AI assistant framework you run yourself. It remembers you across
+sessions, organizes conversations into topics automatically, and connects to the
+tools you give it access to — Discord, Slack, Google Workspace, or a connector
+layer like Composio.
 
-Gisto is an AI assistant framework you run yourself. It remembers you across
-sessions, organizes conversations into topics automatically, and connects to
-the tools you give it access to — Discord, Slack, Google Workspace, or a
-connector layer like Composio.
+Built so a single user or small operator can run their own assistant without
+depending on a hosted platform and without handing their keys to one.
 
-It is built so a single user or small operator can run their own assistant
-without depending on a hosted platform and without handing their keys to one.
+## What it does
 
-## 2. What It Does
+- **Memory** — persistent per-user store: facts, preferences, history, active
+  projects. Loads before acting, updates as it goes. Survives restarts. Never
+  stores your keys or tokens.
 
-- **Memory.** Each user gets a persistent memory store — facts, preferences,
-  history, active projects. Gisto loads it before it acts and updates it as it
-  goes. It is per-user, survives restarts, and never stores your keys or tokens.
+- **Threading** — conversations organized into topic threads automatically. You
+  don't say "start a new chat." Gisto detects topic shifts and keeps things
+  organized. You can also rename, merge, split, and jump into threads manually.
 
-- **Threading.** Conversations are organized into topic threads automatically.
-  You do not have to say "start a new chat." Gisto detects topic shifts and
-  keeps things organized. You can also rename, merge, split, and jump into
-  threads manually.
+- **Modules** — toggleable capability modules. Base modules: *personal*
+  (assistant: memory, notes, drafts, planning, research, chat) and *agency*
+  (lead finding, site building, outreach, client comms, project tracking).
+  Agency includes everything in personal and adds the agency engine on top.
+  Toggle them from config.
 
-- **Modules.** Capabilities are toggleable modules. The base modules are
-  **personal** (assistant capabilities) and **agency** (lead finding, site
-  building, outreach, client comms, project tracking). Agency includes everything
-  in personal and adds the agency engine on top. Toggle them from config.
+- **Integrations** — Discord, Slack, Google Workspace, Composio adapters.
+  Each is optional, each needs your own keys/credentials, nothing is wired by
+  default. No keys shipped in the framework.
 
-- **Integrations.** Discord, Slack, Google Workspace, and Composio adapters.
-  Each is optional. Each needs your own keys/credentials. Nothing is wired by
-  default. No keys are shipped in the framework.
+- **Onboarding** — on first run, Gisto interviews you to seed your memory: what
+  you want to use it for, which modules and integrations you want, your work,
+  your goals, your limits, your style.
 
-- **Onboarding.** On first run, Gisto interviews you to seed your memory:
-  what you want to use it for, which modules and integrations you want, your
-  work, your goals, your limits, your style.
+- **Persona** — calm, capable, direct. Honest about what it can and cannot do.
+  Does not overpromise. Does not pretend to be human. The same Gisto everywhere
+  — CLI, home screen, Discord, Slack.
 
-- **Persona.** Gisto is calm, capable, and direct. It is honest about what it
-  can and cannot do. It does not overpromise. It does not pretend to be human.
-  The same Gisto everywhere — CLI, home screen, Discord, Slack.
-
-## 3. What It Is Not
+## What it is not
 
 - Not a hosted chatbot you log into.
 - Not a demo or a toy.
@@ -52,96 +44,65 @@ without depending on a hosted platform and without handing their keys to one.
 - Not a product with hardcoded keys or baked-in credentials.
 - Not a product that pretends to do things it cannot do without the right config.
 
-## 4. Quick Start
+## Project structure
 
-```bash
-# 1. Clone or extract the repo
-cd gisto-AI-assistant
-
-# 2. Create a virtual environment and install dependencies
-python -m venv .venv
-.venv/bin/activate
-pip install -r requirements.txt
-
-# 3. Copy the example config and fill it in
-cp config.example.yaml config.yaml
-# Edit config.yaml — set your name, memory dir, modules, integrations, keys.
-
-# 4. Run first run (onboarding runs if enabled in config)
-python -m src.cli
-
-# 5. After setup, talk to Gisto via your chosen interface:
-#    - CLI (python -m src.cli)
-#    - Home screen (see home/README.md)
-#    - Discord (configure the Discord integration)
-#    - Slack (configure the Slack integration)
+```
+gisto-AI-assistant/
+  src/
+    core/            # engine, persona, PC control operations
+    permissions/     # trust dial, permission gate, operation registry
+    integrations/    # Discord, Slack, Google, Composio adapters
+    modules/         # personal module, agency module, registry
+    memory.py        # persistent per-user memory store
+    onboarding.py    # first-run interview
+    orchestrator.py  # central message router + self-healing wrapper
+    cli.py           # `python -m gisto ...` entry point
+    config.py        # config loader
+    discord_bot.py   # Discord client wiring
+  CLAUDE.md          # master build prompt
+  README.md
+  requirements.txt
+  .gitignore
 ```
 
-## 5. Configuration
+## Status
 
-Everything is configured through `config.yaml`, which you create by copying
-`config.example.yaml`. The example file has every field with a comment
-explaining what it does.
+Active development. Core framework in place:
 
-Key points:
-- No secrets are shipped. `config.yaml` is gitignored.
-- Each integration is off by default. Enable only what you want and supply
-  your own credentials.
-- Modules are off by default where it makes sense. Toggle them in config.
+- Permission system with four levels (VIEW, ASSIST, CONTROL, FULL_ACCESS) and a
+  real enforcement gate.
+- Agent engine with memory, persona, and operation registry.
+- PC control operations with real implementations (system info, process list,
+  file read/write/move/delete, process kill, command run, app launch, browser
+  navigate).
+- Desktop app shell with login, trust dial, chat, actions, and integrations.
+- Backend skeleton with auth, permissions, vault, and threat detection.
+- Discord bot wiring with persona, memory, threading, and onboarding.
+- CLI entry point (`python -m gisto run|onboard|status`).
 
-See `docs/setup.md` for the full walkthrough.
+Some pieces still being finished: the full backend API endpoints, the web UI,
+the Discord bot integration, real detection rules for the threat engine.
 
-## 6. Modules
+## Requirements
 
-See `docs/modules.md` for what each module does and what it needs.
+- Python 3.10+
+- Node.js 18+ for the web UI
+- A Discord bot token (for the Discord integration, optional)
 
-Briefly:
-- **Personal** — assistant capabilities: memory, notes, drafting, planning,
-  research, content ideas, general conversation.
-- **Agency** — everything in personal plus lead finding, site building,
-  outreach, client comms, project tracking. Only works for things you have
-  actually configured.
+## Development
 
-## 7. Integrations
+```bash
+cd gisto-AI-assistant
+pip install -r requirements.txt
+python -m gisto status   # check setup
+python -m gisto onboard  # first-run setup
+python -m gisto run      # start the bot
+```
 
-See `docs/setup.md` for how to set up each integration.
+## License
 
-Briefly:
-- **Discord** — your bot token, client ID, optional guild/channel restrictions.
-- **Slack** — your bot token, signing secret, optional channel restrictions.
-- **Google** — your OAuth credentials, or use Composio. Gmail/calendar/docs.
-- **Composio** — your Composio API key, as an alternative connector layer.
+Private while in development.
 
-Each integration fails clearly if it is enabled but not configured.
+## Author
 
-## 8. Home Screen
-
-See `home/README.md`. The home screen is the user-facing UI layer — chat with
-Gisto, see your threads, manage modules and integrations, start onboarding.
-
-## 9. Docs
-
-- `docs/setup.md` — step-by-step first-run setup and integration setup.
-- `docs/modules.md` — what each module does and what it needs.
-- `docs/architecture.md` — how the pieces fit together.
-
-## 10. Constraints
-
-- No hardcoded secrets, ever. No keys, tokens, passwords, or credentials in
-  source.
-- No personal bot or Google project baked in. Fill in your own.
-- The name is Gisto. Not Jarvis.
-- Honest about capabilities. If something needs a service you haven't
-  connected, Gisto says so.
-- The framework should actually run. Stubs that don't run are not acceptable
-  for the core. Incomplete features are clearly marked as such.
-
-## 11. Status
-
-This framework is under active development. Core pieces are implemented. Some
-integration implementations and the home screen are intended to be completed
-as part of the build. See `CLAUDE.md` for the master build prompt and full scope.
-
-## 12. License
-
-MIT. See LICENSE.
+Youcef Salemtedj
