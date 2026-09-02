@@ -1,0 +1,45 @@
+Youcef|Salemtedj|motivational.lens.quotes@gmail.com
+
+Tell us about the project's reach and impact
+
+I'm building official-gisto-AI-assistant — a local-first AI assistant framework with memory, autonomous topic threading, toggleable capability modules (personal and agency), and integration adapters for Discord, Slack, Google Workspace, and Composio. The assistant has a defined persona, a system prompt that governs how it responds, and a permission system that gates what it can actually do.
+
+The project sits in the gap between "chat with an AI in a web page" and "give an agent broad access to your machine and hope for the best." It's built so one person can run their own assistant locally or connect it to the surfaces they actually use — Discord, Slack, Google — without depending on a hosted platform and without handing their keys to one.
+
+Under the hood, the framework has:
+- A persistent per-user memory store (facts, preferences, history, active projects) that loads before acting and updates as it goes, survives restarts, and never stores your keys or tokens.
+- Autonomous topic threading — conversations are organized into threads automatically, no manual "new chat" needed, with manual rename/merge/split as fallback.
+- Toggleable modules: personal (assistant capabilities) and agency (lead finding, site building, outreach, client comms, project tracking). Agency includes everything in personal and adds the agency engine on top.
+- Integration adapters for Discord, Slack, Google, and Composio — each optional, each needs your own keys, nothing wired by default.
+- A defined persona and system prompt that governs how the assistant responds.
+- A CLI entry point (`python -m gisto run|onboard|status`).
+- An orchestrator with self-healing error containment — catches, logs, and recovers in-character, never crashes, never silent.
+
+The project is young but real. The core framework is in place: the permission system with four levels (VIEW, ASSIST, CONTROL, FULL_ACCESS) and a real enforcement gate; the agent engine with memory, persona, and an operation registry; real PC control operations with implementations (system info, process list, file read/write/move/delete, process kill, command execution, application launch, browser navigation); the Discord bot wiring with persona, memory, threading, and onboarding; the CLI; the config system with env var overrides; and a master build prompt (CLAUDE.md) that defines the full scope.
+
+Some pieces are still being finished — the full backend API endpoints, the web UI, the Discord bot integration, real detection rules for the threat engine, and the desktop app as a published product. The project is not a toy or a prompt doc: it has a real permission model, a real operation registry, a real memory layer, real integrations, a real Discord bot, and a defined persona that governs how the assistant responds.
+
+The gap it fills is practical rather than theoretical: a personal assistant framework that is honest about control, honest about memory, and honest about what it can and cannot do — built so one person can run their own assistant on their own machine without turning it into a cloud service or giving an untrusted agent unrestricted access.
+
+How will you use the subscription for your project
+
+I'll use Claude Max to accelerate the remaining development of the framework — specifically the harder parts that benefit from sustained, high-capability reasoning:
+
+- Finishing the LLM client layer in the desktop app and the Discord bot so the assistant has a real intelligence layer behind the persona and system prompt rather than a placeholder.
+- Strengthening the permission and PC control layer so the trust dial is genuinely enforced across all surfaces and the operation registry is complete and correct.
+- Building out the web UI and the remaining backend endpoints so the account layer, the remote access path, and the integration surfaces actually work end to end.
+- Completing the Discord integration so it's a real surface into the agent, not just a skeleton.
+- Adding real detection rules to the threat engine.
+- Reviewing the overall architecture for correctness, safety, and consistency before I ask other people to run this on their own machines.
+
+The subscription also lets me develop faster against real usage patterns. If a behavior works well in the framework, the underlying pattern is worth keeping; if it doesn't, I catch it before it becomes something other people build on. The goal is to keep the project genuinely useful on its own, not just internal scaffolding for a product that only makes sense inside my own setup.
+
+Other info
+
+I'm Youcef Salemtedj, working out of the US. The project grew out of building a Discord-based assistant and a local site/lead tool, then realizing the pieces that made those useful — memory, continuity, control, trust boundaries — were worth separating out into something other people could run on their own machine.
+
+I don't currently meet the headline numeric thresholds cleanly — the project is younger and smaller than the larger ecosystem names described in the program. But it's real, it's public, and it solves a concrete problem for a specific kind of builder and user: someone who wants a memory-backed personal assistant with tiered control over their own PC, honest boundaries, and a clear trust model, rather than a cloud chatbot or an agent with no guardrails.
+
+If the program is willing to consider projects that don't yet have the reach of the larger ecosystem names but are honest about what they are and who they're for, this is one I'd like to be considered for.
+
+I'm happy to provide the repo link, any available stats, and anything else that helps you evaluate it. If there's a more specific piece of the work that's a better fit than the overall project — for example a particular module or the permission engine — point me at it and I'll submit that instead.
