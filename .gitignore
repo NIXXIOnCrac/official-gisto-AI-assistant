@@ -55,3 +55,4 @@ build.log
 
 # Local CI helper — not part of the shipped product
 scripts/quick_verify.py
+build.log
