@@ -14,7 +14,7 @@ The product vision: a single user or small operator runs their own assistant tha
 
 **Target user:** a person who wants their own AI assistant they can run themselves, give their own keys to, shape with modules, and connect to their own Discord/Slack/Google — not a SaaS they log into and hope doesn't leak their data.
 
-**What it is not:** a hosted chatbot, a demo, a toy, a single-script chatbot with no memory, a product with hardcoded keys, a product that pretends to do things it doesn't.
+**What it is not:** a hosted chatbot, a demo, a toy, a single-script chatbot with no memory.
 
 ---
 

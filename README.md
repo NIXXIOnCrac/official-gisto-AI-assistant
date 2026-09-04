@@ -1,150 +1,143 @@
-# Gisto — AI Assistant Framework
+# Gisto — Desktop AI Assistant
 
-A memory-backed AI assistant framework you run yourself.
+A desktop AI assistant app for Windows. Speak or type to Gisto — it answers with voice (ElevenLabs TTS) and text, remembers you across sessions, and can look up places or run tools via Composio.
 
-Gisto remembers you across sessions, organizes conversations into topics
-automatically, and connects to the tools you give it access to — Discord, Slack,
-Google Workspace, or a connector layer like Composio. You run it. You supply your
-own keys. Nothing is wired by default.
+## What it is
 
-It is built so a single user or small operator can run their own assistant
-without depending on a hosted platform and without handing their keys to one.
+Gisto is a single-user desktop app (CustomTkinter GUI) that runs in your system tray. You talk to it by:
+
+- **Wake word:** say "gisto" — the mic listens, and when it hears the wake word a 4×4 square grid pops up on screen and pulses while Gisto thinks and replies.
+- **Hotkey:** press `Ctrl+Alt+G` — same grid popup, same flow.
+- **Type:** open the app window and type a message.
+
+Gisto replies with text in a small toast, and speaks the reply aloud using ElevenLabs TTS (British male voice "George" by default). When you ask about places or locations, it uses the Google Places API for detailed info. When you ask it to make tasks or use other tools, it calls Composio (read + write on all tools).
+
+The app ships with its own API keys built in — Nous/Solar Pro 4 for chat, ElevenLabs for voice, Google Places for location lookups, Composio for tools. You do not bring your own keys. Keys are XOR-obfuscated at build time and baked into the EXE; they are never plaintext in the source repo.
+
+A passcode (`12041$` by default) gates the "API & Voice" settings section so users can change the TTS voice and toggle speech without seeing the underlying API keys.
 
 ## What it does
 
-- **Memory.** Persistent per-user store: facts, preferences, history, active
-  projects. Loads before it acts. Updates as it goes. Survives restarts. Never
-  stores your keys or tokens.
+- **Voice chat.** Wake word or hotkey → mic captures → Solar Pro 4 replies → ElevenLabs TTS speaks aloud. Speak-on-by-default.
+- **4×4 light grid.** Transparent popup with 16 rounded squares that pulse in sync while Gisto is working/speaking. Three states: Gisto-speaking, working, user-speaking — each with its own color. Customizable via color picker and presets.
+- **Memory.** File-based per-user memory (facts, preferences, history). Loads before it acts, updates as it goes. First-run onboarding seeds it.
+- **Tools.** Google Places for location lookups, Composio for tasks and other actions. Solar replies can request tool calls via `__TOOL__` markers.
+- **Tray.** App starts open, closes to tray. Wake word/hotkey brings it forward. Window open moves grid into app; window close sends grid back to screen edge, vanishes after 10s silence.
+- **Settings.** Grid size (slider), position (default top-right, draggable by double-click), colors (picker + presets), TTS voice (12 voices, picker behind passcode), speak on/off toggle. Grid setup first, quiz second in onboarding.
 
-- **Threading.** Conversations are organized into topic threads automatically.
-  You do not have to say "start a new chat." Gisto detects topic shifts and keeps
-  things organized. You can also rename, merge, split, and jump into threads
-  manually.
+## Requirements
 
-- **Modules.** Toggleable capability modules. The base modules are *personal*
-  (assistant: memory, notes, drafts, planning, research, chat) and *agency*
-  (lead finding, site building, outreach, client comms, project tracking).
-  Agency includes everything in personal and adds the agency engine on top.
-  Toggle them from config.
+- Windows 10/11
+- Python 3.11 (for building from source)
+- PyInstaller 6.x (for building the EXE)
 
-- **Integrations.** Discord, Slack, Google Workspace, and Composio adapters.
-  Each is optional. Each needs your own keys/credentials. Nothing is wired by
-  default. No keys are shipped in the framework.
+## Building from source
 
-- **Onboarding.** On first run, Gisto interviews you to seed your memory: what
-  you want to use it for, which modules and integrations you want, your work,
-  your goals, your limits, your style.
+```bash
+cd official-gisto-AI-assistant
+pip install -r requirements.txt
+# Set the 4 API keys as environment variables:
+export NOUS_API_KEY=...
+export ELEVENLABS_API_KEY=...
+export GOOGLE_PLACES_API_KEY=...
+export COMPOSIO_API_KEY=...
+python scripts/build_keys.py   # injects XOR-obfuscated keys into _built_keys.py
+python -m PyInstaller --onefile --name "Gisto" \
+    --hidden-import pynput.keyboard._win32 \
+    --hidden-import pystray._win32 \
+    --hidden-import src.desktop._built_keys \
+    --hidden-import src.desktop.keys \
+    --hidden-import src.desktop.audio_watcher \
+    --hidden-import src.desktop.composio_tools \
+    --add-data "assets:gisto_assets" -w src/desktop/main.py
+```
 
-- **Persona.** Calm, capable, direct. Honest about what it can and cannot do.
-  Does not overpromise. Does not pretend to be human. The same Gisto everywhere
-  — CLI, home screen, Discord, Slack.
+Output: `dist/Gisto.exe` (~170 MB).
 
-## What it can do on your machine
+### Environment variables (build time)
 
-When you grant it permission, Gisto can act on your computer through the PC
-control operation registry:
-
-- **Observe:** system info, process list, read files, list directories, capture
-  screen or browser viewport.
-- **Files:** read files, list directories, write files, move files, delete files.
-- **Processes:** list processes, kill processes, run shell commands.
-- **Applications:** launch applications, focus windows.
-- **Browser:** capture browser viewport, navigate to a URL.
-
-Every operation is gated by a permission level. A low-permission Gisto cannot
-write files, run commands, or kill processes. A full-access Gisto can do all of
-it, with everything logged.
-
-## Permission levels
-
-| Level | What Gisto can do |
+| Variable | Purpose |
 |---|---|
-| **View** | Observe only. Screen, files, system info, processes, logs. No changes. |
-| **Assist** | Assist through approved surfaces. Answer from what it sees, take notes, preview files, do only the safe operations you explicitly approve. |
-| **Control** | Take action. Run commands and scripts, manage files, control applications. Sensitive operations (system settings, installs, anything involving money or credentials) stay gated and logged. |
-| **Full Access** | Full PC access. Everything is logged and visible to you. Exists for when you want Gisto to actually run the machine, not just advise on it. |
+| `NOUS_API_KEY` | Nous/Solar Pro 4 API key |
+| `ELEVENLABS_API_KEY` | ElevenLabs TTS API key |
+| `GOOGLE_PLACES_API_KEY` | Google Places API key |
+| `COMPOSIO_API_KEY` | Composio tools API key |
 
-The permission system is not cosmetic. Every PC operation declares the level it
-needs, and the gate enforces it before any action runs.
-
-## What it is not
-
-- Not a hosted chatbot you log into.
-- Not a demo or a toy.
-- Not a single-script chatbot with no memory.
-- Not a product with hardcoded keys or baked-in credentials.
-- Not a product that pretends to do things it cannot do without the right config.
+`build_keys.py` reads these and writes `src/desktop/_built_keys.py` (gitignored, never committed). The EXE bundles `_built_keys.py` so keys travel with the app. On a clean checkout with no env vars, every key function returns empty string — the app starts but cannot call any API until keys are provided.
 
 ## Project structure
 
 ```
-gisto-AI-assistant/
-  src/
-    core/            # engine, persona, PC control operations
-    permissions/     # trust dial, permission gate, operation registry
-    integrations/    # Discord, Slack, Google, Composio adapters
-    modules/         # personal module, agency module, registry
-    memory.py        # persistent per-user memory store
-    onboarding.py    # first-run interview
-    orchestrator.py  # central message router + self-healing wrapper
-    cli.py           # `python -m gisto ...` entry point
-    config.py        # config loader
-    discord_bot.py   # Discord client wiring
-  CLAUDE.md          # master build prompt
+official-gisto-AI-assistant/
+  src/desktop/          # desktop app (CustomTkinter GUI)
+    main.py             # main window, grid popup, settings UI, tray/hotkey wiring
+    audio_watcher.py    # wake-word + speech listener, Solar reply, ElevenLabs TTS
+    tray.py             # system tray icon (pystray)
+    settings.py         # AppSettings dataclass + load/save
+    keys.py             # key access layer (placeholder-only committed version)
+    _built_keys.py      # build-time generated secrets (gitignored, NOT committed)
+    composio_tools.py   # Google Places + Composio tool executors
+    memory.py           # per-user file-based memory (facts, prefs, history)
+    onboarding.py       # first-run interview (skippable)
+    wiring.py           # memory + onboarding wiring
+    __init__.py
+  src/                  # framework-layer code (CLI, Discord bot, integrations)
+  assets/               # Gisto logos (full + circular tray icon)
+  scripts/
+    build_keys.py       # injects real keys into _built_keys.py at build time
+    smoke_test.py       # verifies app constructs without crashing
+    verify_keys.py      # verifies on-disk key blobs decode correctly
+    verify_exe.py       # verifies EXE bundles correct _built_keys
+    recover_keys.py     # key recovery helper (reads gitignored keys.py.bak)
+  build.bat             # one-click rebuild (inject keys + PyInstaller)
+  build/installer/      # Inno Setup installer script (compile on Windows with iscc)
   README.md
+  CLAUDE.md             # build instructions for AI coding agents
   requirements.txt
   .gitignore
 ```
 
+## Security
+
+- **No plaintext keys in source.** `keys.py` committed to git contains only `REPLACE_ME` placeholders. Real keys live in `_built_keys.py` (gitignored) and the built EXE only.
+- **XOR obfuscation.** Keys are XOR'd with a fixed byte (0xA7) and base64-encoded in `_built_keys.py`. This is obfuscation, not cryptography — a determined reverse-engineer with a debugger can recover keys from EXE memory at runtime. For stronger protection, route API calls through your own server.
+- **Passcode lock.** The "API & Voice" settings section is behind a passcode (`12041$` by default). The passcode is hashed (SHA-256) and stored in `_built_keys.py` at build time — the plaintext passcode is never in the repo. Users can change the passcode in settings.
+- **User data.** Memory files, settings, and Composio connection lists are per-user and stored on disk. No user data is sent anywhere except to the API endpoints the app calls (Nous, ElevenLabs, Google, Composio).
+
 ## Status
 
-Active development. The core framework is in place:
+Desktop app v1 is complete and built. What's in the EXE:
 
-- Permission system with four levels (VIEW, ASSIST, CONTROL, FULL_ACCESS) and a
-  real enforcement gate.
-- Agent engine with memory, persona, and operation registry.
-- PC control operations with real implementations (system info, process list,
-  file read/write/move/delete, process kill, command run, app launch, browser
-  navigate).
-- Desktop app shell with login, trust dial, chat, actions, and integrations.
-- Backend skeleton with auth, permissions, vault, and threat detection.
-- Discord bot wiring with persona, memory, threading, and onboarding.
-- CLI entry point (`python -m gisto run|onboard|status`).
+- CustomTkinter window + system tray (pystray)
+- Wake word "gisto" detection (speech_recognition) + hotkey `Ctrl+Alt+G` (pynput)
+- 4×4 square-grid light panel with in-sync pulse, customizable colors/size/position
+- Solar Pro 4 replies via Nous inference API
+- ElevenLabs TTS spoken replies (George voice default, 12 voices selectable)
+- Google Places API for location lookups
+- Composio tools (read + write on all tools) for tasks and other actions
+- File-based per-user memory + first-run onboarding
+- Passcode-gated API/Voice settings section
 
-Some pieces are still being finished:
+Not yet done:
 
-- Full backend API endpoints
-- Web UI
-- Discord bot integration
-- Real detection rules for the threat engine
-- The desktop app as a published product
+- End-to-end voice test with a live microphone (pending manual test on user's machine)
+- Inno Setup installer `.exe` — `build/installer/setup.iss` is written; compile with Inno Setup (`iscc.exe`) on Windows to produce `GistoSetup-1.0.0.exe`
+- Bundling `ffmpeg.exe` for ElevenLabs MP3→PCM decode via pydub (ffmpeg must be on PATH at runtime; without it TTS still works but sounds raw)
 
-## Requirements
+## Requirements.txt
 
-- Python 3.10+
-- Node.js 18+ for the web UI
-- A Discord bot token (for the Discord integration, optional)
-
-## Development
-
-```bash
-cd gisto-AI-assistant
-pip install -r requirements.txt
-python -m gisto status   # check setup
-python -m gisto onboard  # first-run setup
-python -m gisto run      # start the bot
 ```
-
-## Authored for
-
-This project was submitted to the
-[Claude for Open Source Program](https://claude.com/contact-sales/claude-for-oss)
-in September 2026. The application text is in
-[CLAUDE_APPLICATION_FIELDS.txt](CLAUDE_APPLICATION_FIELDS.txt) in this repo.
-
-## License
-
-Private while in development.
+customtkinter
+pystray
+pynput
+SpeechRecognition
+Pillow
+pydub
+elevenlabs
+composio
+composio-client
+sounddevice
+```
 
 ## Author
 

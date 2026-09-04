@@ -1,0 +1,31 @@
+name: chat-command
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Smoke test
+        run: python scripts/smoke_test.py
+
+      - name: Verify on-disk keys decode correctly
+        run: python scripts/verify_keys.py
+
+      - name: Verify EXE bundles correct _built_keys
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: python scripts/verify_exe.py
