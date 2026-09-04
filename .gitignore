@@ -49,3 +49,6 @@ dist/
 
 # PyInstaller spec
 *.spec
+
+# Local CI helper — not part of the shipped product
+scripts/quick_verify.py
