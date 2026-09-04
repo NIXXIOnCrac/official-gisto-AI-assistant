@@ -50,5 +50,8 @@ dist/
 # PyInstaller spec
 *.spec
 
+# PyInstaller build log (contains paths, may reference key material)
+build.log
+
 # Local CI helper — not part of the shipped product
 scripts/quick_verify.py
